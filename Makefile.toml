@@ -1,0 +1,48 @@
+
+############################ 测试初始化项目
+[tasks.init-local]
+script = '''
+cd ..
+target\debug\hpmq-cli.exe init -p=.\hpmq-wasi-template
+'''
+dependencies = ["build-rel"]
+
+############################ 构建项目
+[tasks.builds]
+script_runner = "@shell"
+script = '''
+target\debug\hpmq-cli.exe build -i=repo.netfuse.cn/hpmq_dev/dev:0.1.2
+'''
+dependencies = ["build-rel"]
+
+############################ 测试push项目
+[tasks.push]
+script = '''
+target\debug\hpmq-cli.exe push -i=repo.netfuse.cn/hpmq_dev/dev:0.1.2 -u rendatech -p wjyl123456
+'''
+dependencies = ["build-rel"]
+
+############################ 测试pull项目
+[tasks.pull]
+script = '''
+target\debug\hpmq-cli.exe pull -i repo.netfuse.cn/hpmq_dev/dev:0.1.2 -u rendatech -p wjyl123456
+'''
+dependencies = ["build-rel"]
+
+############################ 初始化容器
+[tasks.ct-init]
+script_runner = "@shell"
+script = '''
+target\debug\hpmq-cli.exe ct-init -i repo.netfuse.cn/hpmq_dev/dev:0.1.2 -f true
+'''
+dependencies = ["build-rel"]
+
+
+###################################################################################
+[tasks.build-rel]
+command = "cargo"
+args = ["build"
+    , "--bin"
+    , "hpmq-cli"
+]
+private = true
