@@ -4,7 +4,8 @@ mod project_variables;
 use anyhow::Result;
 use console::style;
 use dialoguer::theme::ColorfulTheme;
-use dialoguer::Input;
+use dialoguer::{Input, Password};
+use log::info;
 use project_variables::{StringEntry, TemplateSlots, VarInfo};
 use std::ops::Index;
 
@@ -39,19 +40,31 @@ pub fn user_name() -> Result<String> {
     prompt_for_variable(&project_var)
 }
 pub fn password() -> Result<String> {
-    let valid_ident = regex::Regex::new(r"^([a-zA-Z][a-zA-Z0-9_-]+)$")?;
-    let project_var = TemplateSlots {
-        var_name: "crate_name".into(),
-        prompt: "Password".into(),
-        var_info: VarInfo::String {
-            entry: Box::new(StringEntry {
-                default: None,
-                choices: None,
-                regex: Some(valid_ident),
-            }),
-        },
-    };
-    prompt_for_variable(&project_var)
+    // let valid_ident = regex::Regex::new(r"^([a-zA-Z][a-zA-Z0-9_-]+)$")?;
+    // let project_var = TemplateSlots {
+    //     var_name: "crate_name".into(),
+    //     prompt: "Password".into(),
+    //     var_info: VarInfo::String {
+    //         entry: Box::new(StringEntry {
+    //             default: None,
+    //             choices: None,
+    //             regex: Some(valid_ident),
+    //         }),
+    //     },
+    // };
+
+    // let password = Password::new()
+    //     .with_prompt("Password")
+    //     // .with_confirmation("Confirm password", "Passwords mismatching")
+    //     .interact()?;
+
+    let password = Password::with_theme(&ColorfulTheme::default())
+        .with_prompt("Password")
+        .allow_empty_password(true)
+        .interact()?;
+    info!("{}", password);
+    Ok(password)
+    // prompt_for_variable(&project_var)
 }
 
 fn user_question(prompt: &str, default: &Option<String>) -> Result<String> {

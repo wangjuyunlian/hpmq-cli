@@ -1,7 +1,9 @@
 use crate::cli::parse;
-use anyhow::{Context, Error};
+use anyhow::{bail, Context, Error};
 use cargo_generate::{TemplatePath, Vcs};
 use oci_util::Reference;
+use serde_json::Value;
+use std::process::Command;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -23,9 +25,9 @@ pub struct Args {
     #[structopt(
         short,
         long,
-        // default_value = "http://git.netfuse.cn/iiot-pub/hpmq-wasi-template.git"
+        default_value = "https://github.com/wangjuyunlian/hpmq-template.git"
     )]
-    pub git: Option<String>,
+    pub git: String,
 
     // 待开发
     /// Local path to copy the template from. Can not be specified together with --git.
@@ -46,7 +48,7 @@ pub struct PushArgs {
         long,
         help = "请输入完整的镜像仓库，如：repo.netfuse.cn/moss/hello-wasm:0.1"
     )]
-    pub image: String,
+    pub image: Option<String>,
 }
 
 #[derive(Debug, StructOpt)]
@@ -58,9 +60,9 @@ pub struct BuildArgs {
     #[structopt(
         short,
         long,
-        help = "请输入完整的镜像仓库，如：repo.netfuse.cn/moss/hello-wasm:0.1"
+        // help = "请输入完整的镜像仓库，如：repo.netfuse.cn/moss/hello-wasm:0.1"
     )]
-    pub image: String,
+    pub image: Option<String>,
 
     // #[structopt(
     //     short,
@@ -111,13 +113,24 @@ impl Args {
         let define: Vec<String> = Vec::new();
         // define.push(format!("image-project={}", image_project));
 
-        let template = TemplatePath {
-            auto_path: None,
-            subfolder: None,
-            git: self.git,
-            branch: None,
-            path: self.path,
-            favorite: None,
+        let template = if self.path.is_some() {
+            TemplatePath {
+                auto_path: None,
+                subfolder: None,
+                git: None,
+                branch: None,
+                path: self.path,
+                favorite: None,
+            }
+        } else {
+            TemplatePath {
+                auto_path: None,
+                subfolder: None,
+                git: Some(self.git),
+                branch: None,
+                path: self.path,
+                favorite: None,
+            }
         };
         cargo_generate::GenerateArgs {
             template_path: template,
@@ -167,14 +180,80 @@ impl Args {
 impl TryFrom<crate::cli::args::BuildArgs> for oci_util::args::BuildArgs {
     type Error = Error;
 
-    fn try_from(value: crate::cli::args::BuildArgs) -> Result<Self, Self::Error> {
-        let crate::cli::args::BuildArgs { image, config } = value;
-        let image: Reference = image.parse().context("Not a valid image reference")?;
+    fn try_from(value: BuildArgs) -> Result<Self, Self::Error> {
+        let BuildArgs { image, config } = value;
 
+        let image = init_image(&image)?;
         let docker_file = dockerfile_parser::Dockerfile::parse(
             std::fs::read_to_string(config.as_str())?.as_str(),
         )?;
         let config = parse(docker_file)?;
         Ok(oci_util::args::BuildArgs { config, image })
+    }
+}
+
+pub fn init_image(image: &Option<String>) -> anyhow::Result<Reference> {
+    Ok(if let Some(ref image) = image {
+        image
+            .as_str()
+            .parse()
+            .context("Not a valid image reference")?
+    } else {
+        let (name, version) = package_metadata()?;
+        Reference::with_tag(
+            "repo.netfuse.cn".to_string(),
+            format!("{}/{}", "hpmq_dev", name),
+            version,
+        )
+    })
+}
+
+pub fn package_metadata() -> anyhow::Result<(String, String)> {
+    let status = Command::new("cargo")
+        .args(["metadata", "--no-deps"])
+        .output()
+        .context("cargo metadata失败")?;
+    let info: Value =
+        serde_json::from_slice(status.stdout.as_slice()).context("cargo metadata转json失败")?;
+    if let Some(metadata) = info
+        .get("packages")
+        .and_then(|x| x.as_array())
+        .and_then(|x| x.get(0))
+        .and_then(|x| {
+            if let Some(name) = x.get("name").and_then(|val| val.as_str()) {
+                if let Some(version) = x.get("version").and_then(|val| val.as_str()) {
+                    Some((name.to_string(), version.to_string()))
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
+    {
+        Ok(metadata)
+    } else {
+        bail!("cargo metadata获取项目信息失败")
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::cli::args::package_metadata;
+    use oci_util::Reference;
+
+    #[test]
+    fn test() {
+        let image: Reference = "repo.netfuse.cn/hpmq_dev/my-demos:0.3".parse().unwrap();
+        println!("{:?}", image);
+        let image: Reference = "hpmq_dev/my-demos:0.3".parse().unwrap();
+        println!("{:?}", image);
+        let image: Reference = "my-demos:0.3".parse().unwrap();
+        println!("{:?}", image);
+    }
+    #[test]
+    fn test_metadate() {
+        let image = package_metadata().unwrap();
+        println!("{:?}", image);
     }
 }

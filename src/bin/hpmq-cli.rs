@@ -21,11 +21,11 @@ async fn main() -> Result<()> {
 
     let args = Cli::from_args();
     match args {
-        Cli::Init(mut args) => {
-            if args.git.is_none() && args.path.is_none() {
-                args.git =
-                    Some("http://git.netfuse.cn/iiot-pub/hpmq-wasi-template.git".to_string());
-            }
+        Cli::Init(args) => {
+            // if args.git.is_none() && args.path.is_none() {
+            //     args.git =
+            //         Some("http://git.netfuse.cn/iiot-pub/hpmq-wasi-template.git".to_string());
+            // }
             // let image_project = interactive::image_project().unwrap();
             let args: cargo_generate::GenerateArgs = args.to_generate_args();
             debug!("init.args: {:?}", args);
@@ -43,14 +43,14 @@ async fn main() -> Result<()> {
             }
         }
         Cli::Push(args) => {
-            let image: Reference = args.image.parse()?;
+            let image = init_image(&args.image)?;
             let auth = init_auth(args.user_name, args.password);
             match push(&image, &auth).await {
                 Err(e) => {
                     error!("push fail: {:?}", e);
                 }
                 Ok(_) => {
-                    info!("pushed successfully");
+                    info!("{} pushed successfully", image);
                 }
             }
         }
