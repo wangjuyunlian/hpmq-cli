@@ -52,7 +52,7 @@ pub struct BuildArgs {
     #[structopt(short, long)]
     pub image: Option<String>,
 
-    #[structopt(short, long, default_value = "./hpmq.yaml")]
+    #[structopt(short, long, default_value = "./hpmq")]
     pub config: String,
 }
 

@@ -6,4 +6,4 @@ config.json
 images
 examples
 dev.yaml
-hpmq.yaml
+hpmq
