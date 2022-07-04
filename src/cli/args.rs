@@ -43,34 +43,15 @@ pub struct PushArgs {
     #[structopt(short, long)]
     pub password: Option<String>,
 
-    #[structopt(
-        short,
-        long,
-        help = "请输入完整的镜像仓库，如：repo.netfuse.cn/moss/hello-wasm:0.1"
-    )]
+    #[structopt(short, long, help = "请输入完整的镜像仓库")]
     pub image: Option<String>,
 }
 
 #[derive(Debug, StructOpt)]
 pub struct BuildArgs {
-    // #[structopt(short, long)]
-    // pub user_name: Option<String>,
-    // #[structopt(short, long)]
-    // pub password: Option<String>,
-    #[structopt(
-        short,
-        long,
-        // help = "请输入完整的镜像仓库，如：repo.netfuse.cn/moss/hello-wasm:0.1"
-    )]
+    #[structopt(short, long)]
     pub image: Option<String>,
 
-    // #[structopt(
-    //     short,
-    //     long,
-    //     conflicts_with = "image",
-    //     help = "请输入镜像仓库，如：moss/hello-wasm、hello-wasm"
-    // )]
-    // pub repository: Option<String>,
     #[structopt(short, long, default_value = "./hpmq.yaml")]
     pub config: String,
 }
@@ -83,11 +64,7 @@ pub struct PullArgs {
     #[structopt(short, long)]
     pub password: Option<String>,
 
-    #[structopt(
-        short,
-        long,
-        help = "请输入完整的镜像仓库，如：repo.netfuse.cn/moss/hello-wasm:0.1"
-    )]
+    #[structopt(short, long, help = "请输入完整的镜像仓库")]
     pub image: String,
 }
 
@@ -98,11 +75,7 @@ pub struct ContainInitArgs {
 
     #[structopt(short, long)]
     pub password: Option<String>,
-    #[structopt(
-        short,
-        long,
-        help = "请输入完整的镜像仓库，如：repo.netfuse.cn/moss/hello-wasm:0.1"
-    )]
+    #[structopt(short, long, help = "请输入完整的镜像仓库")]
     pub image: String,
     #[structopt(short, long, help = "是否强制初始化容器", default_value = "false")]
     pub force: String,
@@ -244,7 +217,7 @@ mod test {
 
     #[test]
     fn test() {
-        let image: Reference = "repo.netfuse.cn/hpmq_dev/my-demos:0.3".parse().unwrap();
+        let image: Reference = "abc/hpmq_dev/my-demos:0.3".parse().unwrap();
         println!("{:?}", image);
         let image: Reference = "hpmq_dev/my-demos:0.3".parse().unwrap();
         println!("{:?}", image);

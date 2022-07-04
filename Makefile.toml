@@ -25,18 +25,15 @@ dependencies = ["build-rel"]
 ############################ 测试pull项目
 [tasks.pull]
 script = '''
-target\debug\hpmq-cli.exe pull -i repo.netfuse.cn/hpmq_dev/hpmq_cli:0.3.0
+target\debug\hpmq-cli.exe pull -i ${@}
 '''
 dependencies = ["build-rel"]
 
 ############################ 初始化容器
 [tasks.ct-init]
 script_runner = "@shell"
-#script = '''
-#target\debug\hpmq-cli.exe ct-init -i repo.netfuse.cn/hpmq_dev/hpmq_cli:0.3.0 -f true
-#'''
 script = '''
-target\debug\hpmq-cli.exe ct-init -i repo.netfuse.cn/hpmq_dev/ali-discard:0.1
+target\debug\hpmq-cli.exe ct-init -i ${@}
 '''
 dependencies = ["build-rel"]
 
