@@ -13,7 +13,7 @@ use oci_util::RegistryAuth;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    custom_utils::logger::LoggerBuilder::default(Debug)
+    custom_utils::logger::custom_build(Debug)
         .module("hyper", Info)
         .build_default()
         .log_to_stdout()
